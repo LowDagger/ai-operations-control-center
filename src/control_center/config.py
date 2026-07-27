@@ -1,8 +1,32 @@
 """Central configuration for deterministic business rules."""
 
+import os
 from decimal import Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class AppMode(StrEnum):
+    """Supported application operating modes."""
+
+    DEMO = "demo"
+    LIVE = "live"
+
+
+class AppSettings(BaseModel):
+    """Validated runtime settings that do not require credentials."""
+
+    model_config = ConfigDict(frozen=True)
+
+    app_mode: AppMode = AppMode.DEMO
+
+    @classmethod
+    def from_environment(cls) -> "AppSettings":
+        """Read the app mode from the environment with a safe demo default."""
+
+        app_mode = os.environ.get("APP_MODE", AppMode.DEMO.value)
+        return cls(app_mode=app_mode.strip().lower())
 
 
 class AlertThresholds(BaseModel):
@@ -25,4 +49,3 @@ class AlertThresholds(BaseModel):
     critical_creative_fatigue: Decimal = Field(default=Decimal("5.00"), ge=0)
     cost_spike: Decimal = Field(default=Decimal("0.25"), ge=0)
     critical_cost_spike: Decimal = Field(default=Decimal("0.50"), ge=0)
-
