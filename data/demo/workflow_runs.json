@@ -1,0 +1,23 @@
+[
+  {
+    "workflow_name": "Daily Revenue Sync",
+    "status": "succeeded",
+    "last_run": "2026-01-15T11:45:00Z",
+    "failure_reason": null,
+    "retry_status": "not_needed",
+    "cost_anomaly": 0.05,
+    "owner": "Operations",
+    "severity": "info"
+  },
+  {
+    "workflow_name": "Refund Reconciliation",
+    "status": "failed",
+    "last_run": "2026-01-15T11:30:00Z",
+    "failure_reason": "Fictional input file failed validation.",
+    "retry_status": "exhausted",
+    "cost_anomaly": 0.75,
+    "owner": "Finance Operations",
+    "severity": "critical"
+  }
+]
+

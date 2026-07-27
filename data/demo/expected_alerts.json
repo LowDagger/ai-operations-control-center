@@ -1,0 +1,73 @@
+[
+  {
+    "alert_type": "low_roas",
+    "title": "Low ROAS",
+    "message": "ROAS is below the configured minimum.",
+    "severity": "warning",
+    "source": "metrics.roas",
+    "current_value": 1.5,
+    "threshold": 2.0,
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "high_cac",
+    "title": "High CAC",
+    "message": "Customer acquisition cost exceeds the configured maximum.",
+    "severity": "warning",
+    "source": "metrics.cac",
+    "current_value": 66.66666666666666666666666667,
+    "threshold": 50.0,
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "high_refund_rate",
+    "title": "High refund rate",
+    "message": "Refund rate exceeds the configured maximum.",
+    "severity": "critical",
+    "source": "metrics.refund_rate",
+    "current_value": 0.15,
+    "threshold": 0.05,
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "creative_fatigue",
+    "title": "Creative fatigue",
+    "message": "Creative frequency exceeds the configured maximum.",
+    "severity": "critical",
+    "source": "metrics.creative_frequency",
+    "current_value": 6,
+    "threshold": 3.0,
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "workflow_failure",
+    "title": "Workflow failed: Refund Reconciliation",
+    "message": "Fictional input file failed validation.",
+    "severity": "critical",
+    "source": "workflow.Refund Reconciliation",
+    "current_value": "failed",
+    "threshold": "succeeded",
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "cost_spike",
+    "title": "Cost spike: Refund Reconciliation",
+    "message": "Workflow cost increase exceeds the configured maximum.",
+    "severity": "critical",
+    "source": "workflow.Refund Reconciliation.cost",
+    "current_value": 0.75,
+    "threshold": 0.25,
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  },
+  {
+    "alert_type": "missing_data",
+    "title": "Missing source data",
+    "message": "Required source fields are missing: impressions.",
+    "severity": "warning",
+    "source": "dtc_input",
+    "current_value": "impressions",
+    "threshold": "all fields present",
+    "created_timestamp": "2026-01-15T12:00:00Z"
+  }
+]
+

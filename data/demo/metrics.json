@@ -1,0 +1,14 @@
+{
+  "revenue": 12000,
+  "ad_spend": 8000,
+  "new_customers": 120,
+  "orders": 200,
+  "sessions": 10000,
+  "refunds": 30,
+  "refunded_revenue": 1800,
+  "impressions": null,
+  "clicks": 400,
+  "creative_frequency": 6,
+  "previous_period_ad_spend": 4000
+}
+
