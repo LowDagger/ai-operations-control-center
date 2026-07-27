@@ -1,0 +1,390 @@
+{
+  "name": "DTC Operations Ingestion - Fictional Demo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7c1b7f95-845c-4d42-8a7b-93bd1dd00a01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        160
+      ],
+      "notes": "Start the deterministic fictional ingestion manually."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f59e9a18-7867-45b9-96d8-05b7a04d6339",
+              "name": "simulate_failure",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2aeed615-845f-4d30-a22f-82b8af6c8d02",
+      "name": "Demo Controls",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -820,
+        160
+      ],
+      "notes": "Set simulate_failure to true to exercise the controlled failure path.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const controls = $input.first().json;\n\nconst sources = {\n  shopify: {\n    source: 'fictional_shopify',\n    snapshot_date: '2026-01-15',\n    records: [\n      { period: '2026-01-15T00:00:00Z', gross_revenue: 7000.00, new_customers: 70, order_count: 120, refund_count: 18, refunded_revenue: 1000.00 },\n      { period: '2026-01-15T12:00:00Z', gross_revenue: 5000.00, new_customers: 50, order_count: 80, refund_count: 12, refunded_revenue: 800.00 }\n    ]\n  },\n  meta_ads: {\n    source: 'fictional_meta_ads',\n    snapshot_date: '2026-01-15',\n    records: [\n      { campaign_id: 'demo-prospecting', spend: 5000.00, impressions: 150000, clicks: 250, frequency: 6.0, previous_period_spend: 2500.00 },\n      { campaign_id: 'demo-retargeting', spend: 3000.00, impressions: 100000, clicks: 150, frequency: 6.0, previous_period_spend: 1500.00 }\n    ]\n  },\n  klaviyo: {\n    source: 'fictional_klaviyo',\n    snapshot_date: '2026-01-15',\n    records: [\n      { campaign_id: 'demo-welcome-series', messages_sent: 2400, messages_delivered: 2350, attributed_orders: 36 },\n      { campaign_id: 'demo-winback-series', messages_sent: 1600, messages_delivered: 1540, attributed_orders: 14 }\n    ]\n  },\n  google_sheets: {\n    source: 'fictional_google_sheets',\n    snapshot_date: '2026-01-15',\n    records: [\n      { row_id: 'demo-storefront-traffic', sessions: 10000, owner: 'Operations', data_quality_status: 'verified' }\n    ]\n  }\n};\n\nreturn [{ json: { controls, sources } }];"
+      },
+      "id": "10420d88-73c5-40b2-9e4a-e36b13c95903",
+      "name": "Load Fictional Sample Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -580,
+        160
+      ],
+      "notes": "Self-contained copies of the committed sample files make the imported workflow portable. All values and dates are fictional and fixed.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst { sources } = input;\n\nconst normalized = {\n  commerce: sources.shopify.records.map((record) => ({\n    occurred_at: record.period,\n    revenue: Number(record.gross_revenue),\n    new_customers: Number(record.new_customers),\n    orders: Number(record.order_count),\n    refunds: Number(record.refund_count),\n    refunded_revenue: Number(record.refunded_revenue)\n  })),\n  advertising: sources.meta_ads.records.map((record) => ({\n    campaign_id: record.campaign_id,\n    ad_spend: Number(record.spend),\n    impressions: Number(record.impressions),\n    clicks: Number(record.clicks),\n    creative_frequency: Number(record.frequency),\n    previous_period_ad_spend: Number(record.previous_period_spend)\n  })),\n  lifecycle_marketing: sources.klaviyo.records.map((record) => ({\n    campaign_id: record.campaign_id,\n    messages_sent: Number(record.messages_sent),\n    messages_delivered: Number(record.messages_delivered),\n    attributed_orders: Number(record.attributed_orders)\n  })),\n  operations: sources.google_sheets.records.map((record) => ({\n    row_id: record.row_id,\n    sessions: Number(record.sessions),\n    owner: record.owner,\n    data_quality_status: record.data_quality_status\n  }))\n};\n\nreturn [{ json: { controls: input.controls, snapshot_date: '2026-01-15', normalized } }];"
+      },
+      "id": "2a2ee5bc-f57c-44e5-a88f-1b4321b25e04",
+      "name": "Normalize Source Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        160
+      ],
+      "notes": "Maps four fictional source shapes into stable operational field names. No business metrics or alerts are calculated here.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst { commerce, advertising, operations } = input.normalized;\n\nconst sum = (records, field) => records.reduce((total, record) => total + record[field], 0);\nconst totalImpressions = sum(advertising, 'impressions');\nconst weightedFrequency = totalImpressions === 0\n  ? 0\n  : advertising.reduce((total, record) => total + (record.creative_frequency * record.impressions), 0) / totalImpressions;\n\nconst raw_inputs = {\n  revenue: sum(commerce, 'revenue'),\n  ad_spend: sum(advertising, 'ad_spend'),\n  new_customers: sum(commerce, 'new_customers'),\n  orders: sum(commerce, 'orders'),\n  sessions: sum(operations, 'sessions'),\n  refunds: sum(commerce, 'refunds'),\n  refunded_revenue: sum(commerce, 'refunded_revenue'),\n  impressions: totalImpressions,\n  clicks: sum(advertising, 'clicks'),\n  creative_frequency: weightedFrequency,\n  previous_period_ad_spend: sum(advertising, 'previous_period_ad_spend')\n};\n\nreturn [{ json: { controls: input.controls, snapshot_date: input.snapshot_date, raw_inputs } }];"
+      },
+      "id": "65cfa797-322f-4205-9f42-d352856dec05",
+      "name": "Aggregate Raw Operational Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        160
+      ],
+      "notes": "Produces only the eleven source inputs accepted by DTCInputData. Python remains authoritative for calculated metrics and alert rules.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bd1facf6-fb6c-4c5a-92f1-e25f55515690",
+              "leftValue": "={{ $json.controls.simulate_failure }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "be4213f8-fb82-4d9f-8ea4-4418f0091006",
+      "name": "Simulate Failure?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        140,
+        160
+      ],
+      "notes": "Routes to a controlled, persisted failure observation when the demo toggle is true."
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn [{\n  json: {\n    metric_snapshot: {\n      id: '11111111-1111-4111-8111-111111111111',\n      created_at: '2026-01-15T12:05:00Z',\n      ...input.raw_inputs\n    },\n    workflow_run: {\n      id: '22222222-2222-4222-8222-222222222222',\n      created_at: '2026-01-15T12:05:00Z',\n      workflow_name: 'DTC Operations Ingestion - Fictional Demo',\n      status: 'succeeded',\n      last_run: '2026-01-15T12:05:00Z',\n      failure_reason: null,\n      retry_status: 'not_needed',\n      cost_anomaly: 0,\n      owner: 'Operations',\n      severity: 'info'\n    }\n  }\n}];"
+      },
+      "id": "df9d5522-adbf-4fa0-8f22-9ad135c1e507",
+      "name": "Build Success Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ],
+      "notes": "Builds fixed, idempotent Supabase rows. Calculated metric columns are deliberately omitted.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/metrics_snapshots?on_conflict=id' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.metric_snapshot) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "898fa16b-983c-461d-b9d3-704dd65ca208",
+      "name": "Upsert Metric Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "notes": "Trusted server-side write through Supabase REST. Credentials come from the n8n environment and are not exported.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/workflow_runs?on_conflict=id' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Build Success Rows').first().json.workflow_run) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "83b65f07-061a-4748-b8c3-5ba96a25af09",
+      "name": "Upsert Successful Workflow Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "notes": "Persists observed execution metadata only. This node does not decide retries or approvals.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    id: '33333333-3333-4333-8333-333333333333',\n    created_at: '2026-01-15T12:05:00Z',\n    workflow_name: 'DTC Operations Ingestion - Fictional Demo',\n    status: 'failed',\n    last_run: '2026-01-15T12:05:00Z',\n    failure_reason: 'Controlled fictional source validation failure.',\n    retry_status: 'not_needed',\n    cost_anomaly: 0,\n    owner: 'Operations',\n    severity: 'critical'\n  }\n}];"
+      },
+      "id": "19eea23d-dcf9-4e6c-b99f-d97307848810",
+      "name": "Build Controlled Failure Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        20
+      ],
+      "notes": "Creates fixed failed-run metadata for demonstration. It does not write a metric snapshot or create an alert.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/workflow_runs?on_conflict=id' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "60b51d07-2218-499f-b932-da9b83823311",
+      "name": "Upsert Failed Workflow Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        20
+      ],
+      "notes": "Persists only the controlled failed-run observation. No alert row is written.",
+      "notesInFlow": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Demo Controls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demo Controls": {
+      "main": [
+        [
+          {
+            "node": "Load Fictional Sample Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Fictional Sample Data": {
+      "main": [
+        [
+          {
+            "node": "Normalize Source Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Source Records": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Raw Operational Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Raw Operational Inputs": {
+      "main": [
+        [
+          {
+            "node": "Simulate Failure?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Failure?": {
+      "main": [
+        [
+          {
+            "node": "Build Controlled Failure Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Success Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Metric Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Metric Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Upsert Successful Workflow Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Controlled Failure Row": {
+      "main": [
+        [
+          {
+            "node": "Upsert Failed Workflow Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0f606019-f2f5-4eaf-9cc5-a5a31d3c14dc",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,18 @@
+{
+  "source": "fictional_klaviyo",
+  "snapshot_date": "2026-01-15",
+  "records": [
+    {
+      "campaign_id": "demo-welcome-series",
+      "messages_sent": 2400,
+      "messages_delivered": 2350,
+      "attributed_orders": 36
+    },
+    {
+      "campaign_id": "demo-winback-series",
+      "messages_sent": 1600,
+      "messages_delivered": 1540,
+      "attributed_orders": 14
+    }
+  ]
+}

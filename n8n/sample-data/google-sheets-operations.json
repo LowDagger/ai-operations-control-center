@@ -1,0 +1,12 @@
+{
+  "source": "fictional_google_sheets",
+  "snapshot_date": "2026-01-15",
+  "records": [
+    {
+      "row_id": "demo-storefront-traffic",
+      "sessions": 10000,
+      "owner": "Operations",
+      "data_quality_status": "verified"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import streamlit as st
 
+from control_center.config import AppMode
 from control_center.models.metrics import CalculatedMetrics
 from control_center.models.summaries import format_usd
 
@@ -15,6 +16,14 @@ class KpiCard:
 
     label: str
     value: str
+
+
+def get_data_source_label(app_mode: AppMode) -> str:
+    """Return the compact configured data-source indicator."""
+
+    if app_mode == AppMode.DEMO:
+        return "LOCAL DEMO DATA"
+    return "SUPABASE LIVE DATA"
 
 
 def format_number(value: Decimal | int | None, decimal_places: int = 2) -> str:
@@ -70,4 +79,3 @@ def render_kpis(metrics: CalculatedMetrics) -> None:
         with st.container(horizontal=True):
             for card in card_group:
                 st.metric(card.label, card.value, border=True)
-

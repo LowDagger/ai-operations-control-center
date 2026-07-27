@@ -4,7 +4,7 @@ import os
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, SecretStr
 
 
 class AppMode(StrEnum):
@@ -22,6 +22,9 @@ class AppSettings(BaseModel):
     app_mode: AppMode = AppMode.DEMO
     gemini_api_key: SecretStr | None = Field(default=None, repr=False)
     gemini_model: str = Field(default="gemini-2.5-flash", min_length=1)
+    supabase_url: HttpUrl | None = None
+    supabase_anon_key: SecretStr | None = Field(default=None, repr=False)
+    supabase_service_role_key: SecretStr | None = Field(default=None, repr=False)
 
     @classmethod
     def from_environment(cls) -> "AppSettings":
@@ -30,10 +33,20 @@ class AppSettings(BaseModel):
         app_mode = os.environ.get("APP_MODE", AppMode.DEMO.value)
         api_key = os.environ.get("GEMINI_API_KEY", "").strip() or None
         model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        supabase_url = os.environ.get("SUPABASE_URL", "").strip() or None
+        supabase_anon_key = (
+            os.environ.get("SUPABASE_ANON_KEY", "").strip() or None
+        )
+        supabase_service_role_key = (
+            os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or None
+        )
         return cls(
             app_mode=app_mode.strip().lower(),
             gemini_api_key=api_key,
             gemini_model=model,
+            supabase_url=supabase_url,
+            supabase_anon_key=supabase_anon_key,
+            supabase_service_role_key=supabase_service_role_key,
         )
 
 

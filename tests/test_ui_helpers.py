@@ -1,14 +1,20 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from control_center.config import AppMode
 from control_center.models.alerts import Alert, AlertType, Severity
 from control_center.models.metrics import CalculatedMetrics
 from control_center.models.workflows import RetryStatus, WorkflowRun, WorkflowStatus
 from control_center.ui.alerts import alert_rows, format_alert_value
-from control_center.ui.dashboard import build_kpi_cards
+from control_center.ui.dashboard import build_kpi_cards, get_data_source_label
 from control_center.ui.workflows import workflow_rows
 
 NOW = datetime(2026, 1, 15, 12, tzinfo=UTC)
+
+
+def test_data_source_labels_are_configuration_driven() -> None:
+    assert get_data_source_label(AppMode.DEMO) == "LOCAL DEMO DATA"
+    assert get_data_source_label(AppMode.LIVE) == "SUPABASE LIVE DATA"
 
 
 def test_kpi_helpers_use_en_us_display_formatting() -> None:

@@ -6,20 +6,24 @@ control plane.
 
 ## Current milestone
 
-Milestone 3 adds optional Gemini founder summaries on top of the deterministic
-local foundation and Streamlit dashboard:
+Milestone 5 adds deterministic n8n ingestion while preserving the local demo
+foundation, safe Gemini summaries, and Supabase repository:
 
 - validated Pydantic v2 domain models;
 - offline metric calculations with safe division-by-zero behavior;
 - explicit, configuration-driven alert rules;
-- a JSON-backed local repository;
+- a JSON-backed local demo repository;
 - fictional demo fixtures with stable expected results; and
 - an offline Pytest suite;
 - KPI cards, workflow monitoring, and active alert views in Streamlit; and
-- concise, structured founder summaries with deterministic offline fallback.
+- concise, structured founder summaries with deterministic offline fallback;
+- a validated Supabase repository for live reads and trusted backend writes; and
+- a versioned PostgreSQL migration with RLS and read-only anon access; and
+- one manually triggered n8n workflow that ingests fixed fictional source data
+  and writes raw metric inputs plus workflow-run observations to Supabase.
 
-There is no Supabase integration or n8n workflow in this milestone. Claude is an
-unconfigured extension stub and is not required for the MVP.
+Claude remains an unconfigured extension stub and is not required for the MVP.
+Final deployment and presentation polish are outside this milestone.
 
 ## Setup
 
@@ -44,7 +48,61 @@ python -m pytest
 streamlit run app.py
 ```
 
-The dashboard reads only the fictional fixtures under `data/demo/`.
+With the default `APP_MODE=demo`, the dashboard reads only the fictional fixtures
+under `data/demo/` and never constructs a Supabase client.
+
+## Supabase live persistence
+
+Create a project from the [Supabase dashboard](https://supabase.com/dashboard).
+From the project settings, copy the project URL, anon key, and—only for a trusted
+server-side writer—the service-role key.
+
+Apply the migration with the Supabase CLI:
+
+```powershell
+supabase init
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push --dry-run
+supabase db push
+```
+
+The migration at `supabase/migrations/001_initial_schema.sql` creates the metric,
+workflow, alert, and generated-summary tables. It enables RLS and permits the
+anon role to read the fictional portfolio data. It does not grant anon writes.
+
+Enable the live dashboard for the current PowerShell session:
+
+```powershell
+$env:APP_MODE="live"
+$env:SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_ANON_KEY="your-anon-key"
+streamlit run app.py
+```
+
+Live mode requires the URL and anon key. It never silently falls back to local
+fixtures. The optional `SUPABASE_SERVICE_ROLE_KEY` is used only to construct the
+trusted write client behind repository save methods; it must never be placed in
+browser code, committed, or exposed to users.
+
+## n8n fictional ingestion
+
+Import `n8n/workflows/dtc-operations-ingestion.json` into n8n after applying the
+Supabase migration. The n8n server requires:
+
+```text
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+The workflow starts with a Manual Trigger. Its default success path upserts one
+fixed raw metric snapshot and one successful workflow observation. Set
+`simulate_failure=true` in **Demo Controls** to run the controlled failure path,
+which writes only a fixed failed workflow observation.
+
+The export contains no secrets and requires no Shopify, Meta Ads, Klaviyo, or
+Google credentials. Detailed import, configuration, and run instructions are in
+[`docs/n8n-workflow.md`](docs/n8n-workflow.md).
 
 ## Gemini live summaries
 
@@ -60,6 +118,8 @@ Enable live summaries for the current PowerShell session:
 
 ```powershell
 $env:APP_MODE="live"
+$env:SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_ANON_KEY="your-anon-key"
 $env:GEMINI_API_KEY="your-key"
 $env:GEMINI_MODEL="gemini-2.5-flash"
 streamlit run app.py
@@ -76,7 +136,8 @@ operational decisions.
 
 ## Screenshot
 
-> Screenshot placeholder — add the final Milestone 3 dashboard capture here.
+> Screenshot placeholder — add the final dashboard capture during presentation
+> polish.
 
 All current data is fictional and exists only to demonstrate deterministic
 behavior. AI will never control calculations, alert decisions, approvals, or

@@ -1,0 +1,22 @@
+{
+  "source": "fictional_shopify",
+  "snapshot_date": "2026-01-15",
+  "records": [
+    {
+      "period": "2026-01-15T00:00:00Z",
+      "gross_revenue": 7000.00,
+      "new_customers": 70,
+      "order_count": 120,
+      "refund_count": 18,
+      "refunded_revenue": 1000.00
+    },
+    {
+      "period": "2026-01-15T12:00:00Z",
+      "gross_revenue": 5000.00,
+      "new_customers": 50,
+      "order_count": 80,
+      "refund_count": 12,
+      "refunded_revenue": 800.00
+    }
+  ]
+}

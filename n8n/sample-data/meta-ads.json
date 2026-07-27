@@ -1,0 +1,22 @@
+{
+  "source": "fictional_meta_ads",
+  "snapshot_date": "2026-01-15",
+  "records": [
+    {
+      "campaign_id": "demo-prospecting",
+      "spend": 5000.00,
+      "impressions": 150000,
+      "clicks": 250,
+      "frequency": 6.0,
+      "previous_period_spend": 2500.00
+    },
+    {
+      "campaign_id": "demo-retargeting",
+      "spend": 3000.00,
+      "impressions": 100000,
+      "clicks": 150,
+      "frequency": 6.0,
+      "previous_period_spend": 1500.00
+    }
+  ]
+}
