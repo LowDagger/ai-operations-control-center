@@ -40,6 +40,33 @@ No Shopify, Meta Ads, Klaviyo, or Google credentials are used. The sample
 records are fixed fictional aggregates without customer names, email addresses,
 payment details, advertising-account identifiers, or other real data.
 
+## Streamlit deployment secrets
+
+The public Community Cloud deployment should set only:
+
+```toml
+APP_MODE = "demo"
+```
+
+Demo mode requires no credentials. For live mode, configure root-level
+Streamlit secrets in Community Cloud settings rather than committing a local
+file:
+
+- `APP_MODE=live`;
+- `SUPABASE_URL`;
+- `SUPABASE_ANON_KEY`;
+- `GEMINI_API_KEY` when live Gemini summaries are desired; and
+- `GEMINI_MODEL`, which otherwise defaults to `gemini-2.5-flash`.
+
+`SUPABASE_SERVICE_ROLE_KEY` is documented for trusted backend writes but should
+be omitted from the public read-only Streamlit deployment. The n8n server keeps
+its own trusted writer environment separately.
+
+The repository ignores `.streamlit/secrets.toml` and `.env`. Root-level
+Streamlit secrets become environment variables and are validated by
+`AppSettings`; secret values are represented by `SecretStr` and excluded from
+model representations.
+
 ## Row Level Security
 
 The migration enables RLS on every table. It creates explicit anon SELECT
@@ -61,6 +88,8 @@ privacy review.
   unbounded duplicate records.
 - The controlled n8n failure branch writes only workflow-run metadata and never
   writes alerts.
+- Streamlit Community Cloud demo mode needs no key material and performs no
+  provider or Supabase network call.
 
 ## AI boundary
 
@@ -72,3 +101,7 @@ the deterministic narrative fallback and does not change persisted operations.
 n8n has the same decision boundary: it may prepare raw inputs and record
 execution observations, but Python alone calculates derived metrics and
 evaluates deterministic alert rules.
+
+Humans retain ownership of workflow retries, escalation, incident closure,
+threshold changes, and approvals. `docs/sop-workflow-failure.md` records this
+operating boundary.

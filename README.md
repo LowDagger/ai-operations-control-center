@@ -1,31 +1,83 @@
 # AI Operations Control Center
 
-AI Operations Control Center is a portfolio project for monitoring direct-to-consumer
-(DTC) business metrics, operational workflows, and deterministic alerts from one
-control plane.
+AI Operations Control Center is an interview-ready portfolio project for
+monitoring direct-to-consumer (DTC) performance, operational workflows,
+deterministic alerts, and concise founder summaries from one control plane.
+Every committed dataset is fictional.
 
-## Current milestone
+## Delivery status
 
-Milestone 5 adds deterministic n8n ingestion while preserving the local demo
-foundation, safe Gemini summaries, and Supabase repository:
+The final delivery milestone is complete. The project includes:
 
 - validated Pydantic v2 domain models;
 - offline metric calculations with safe division-by-zero behavior;
 - explicit, configuration-driven alert rules;
 - a JSON-backed local demo repository;
-- fictional demo fixtures with stable expected results; and
+- fictional demo fixtures with stable expected results;
 - an offline Pytest suite;
-- KPI cards, workflow monitoring, and active alert views in Streamlit; and
+- KPI cards, workflow monitoring, and active alert views in Streamlit;
 - concise, structured founder summaries with deterministic offline fallback;
-- a validated Supabase repository for live reads and trusted backend writes; and
-- a versioned PostgreSQL migration with RLS and read-only anon access; and
+- a validated Supabase repository for live reads and trusted backend writes;
+- a versioned PostgreSQL migration with RLS and read-only anon access;
 - one manually triggered n8n workflow that ingests fixed fictional source data
-  and writes raw metric inputs plus workflow-run observations to Supabase.
+  and writes raw metric inputs plus workflow-run observations to Supabase; and
+- Streamlit Community Cloud deployment configuration and interview runbooks.
 
 Claude remains an unconfigured extension stub and is not required for the MVP.
-Final deployment and presentation polish are outside this milestone.
+No final deployment is performed by this repository change.
 
-## Setup
+## Architecture summary
+
+```text
+Fictional fixtures -> LocalJsonRepository ---------.
+                                                   |
+Fictional n8n inputs -> Supabase -> SupabaseRepository
+                                                   |
+                                                   v
+Pydantic validation -> Python metric service -> Python alert service
+                                                   |
+                                                   v
+                         Gemini summary or deterministic fallback
+                                                   |
+                                                   v
+                                      Streamlit dashboard
+```
+
+The repository factory chooses local fixtures in demo mode and Supabase in live
+mode. Python remains authoritative for calculations and alerts. Gemini can only
+summarize validated results, and n8n can only prepare raw inputs and workflow
+observations.
+
+## Key features
+
+- Eight en-US formatted DTC KPI cards.
+- Deterministic warning, critical, workflow-failure, cost-spike, and
+  missing-data alerts.
+- Clear workflow status, severity, owner, retry-status, and failure context.
+- Structured Gemini output with validation, timeout handling, and visible
+  deterministic fallback.
+- Demo/live repository selection that fails closed instead of silently mixing
+  data sources.
+- Supabase migration with financial numeric types, constraints, indexes, RLS,
+  anon reads, and trusted backend writes.
+- Portable n8n workflow with fixed fictional inputs and an explicit failure
+  branch.
+
+## Screenshots
+
+> **Dashboard overview placeholder** — add a wide desktop capture showing KPI
+> cards and the demo badges.
+
+> **Operations placeholder** — add a capture showing the failed workflow and
+> severity-labelled alerts.
+
+> **Founder summary placeholder** — add a capture showing provider and fallback
+> status.
+
+> **n8n workflow placeholder** — add a canvas capture of the success and
+> controlled-failure branches.
+
+## Local setup
 
 Python 3.11 or newer is required.
 
@@ -36,20 +88,38 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-## Run tests
+`pyproject.toml` is the authoritative project definition and contains all four
+runtime dependencies. The runtime-only `requirements.txt` installs this local
+`src/` package on Streamlit Community Cloud through `-e .`.
 
-```powershell
-python -m pytest
-```
+## Demo mode setup
 
-## Run the dashboard
+Demo mode is the safe default. It requires no `.env`, API keys, network calls,
+Gemini account, or Supabase project.
 
 ```powershell
 streamlit run app.py
 ```
 
-With the default `APP_MODE=demo`, the dashboard reads only the fictional fixtures
-under `data/demo/` and never constructs a Supabase client.
+To make the mode explicit for the current PowerShell session:
+
+```powershell
+$env:APP_MODE="demo"
+streamlit run app.py
+```
+
+The dashboard reads only the fictional fixtures under `data/demo/` and never
+constructs a Supabase or Gemini client.
+
+For a local secrets file, create `.streamlit/secrets.toml` without committing
+it. Root-level Streamlit secrets are available as environment variables:
+
+```toml
+APP_MODE = "demo"
+GEMINI_MODEL = "gemini-2.5-flash"
+```
+
+`.streamlit/secrets.toml` is excluded by `.gitignore`.
 
 ## Supabase live persistence
 
@@ -134,12 +204,132 @@ Gemini provides narrative assistance only. AI never calculates metrics, creates
 or changes alerts, chooses workflow retries, grants approvals, or makes
 operational decisions.
 
-## Screenshot
+## Test commands
 
-> Screenshot placeholder — add the final dashboard capture during presentation
-> polish.
+All tests are designed to run offline:
+
+```powershell
+python -m pytest
+python -m compileall -q app.py src tests
+git diff --check
+python -m pip check
+```
+
+## Streamlit Community Cloud deployment
+
+`app.py` at the repository root is the deployment entry point. Community Cloud
+uses `requirements.txt` to install the local package, and `pyproject.toml`
+provides its complete runtime dependency set.
+
+1. Push the repository to GitHub without `.env` or
+   `.streamlit/secrets.toml`.
+2. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/).
+3. Select **Create app**, then choose the repository and branch.
+4. Set the main file path to `app.py`.
+5. Open **Advanced settings** and select Python 3.12.
+6. For the public portfolio deployment, paste:
+
+   ```toml
+   APP_MODE = "demo"
+   ```
+
+7. Select **Deploy** and confirm the page shows `DEMO MODE`,
+   `LOCAL DEMO DATA`, and the January 15, 2026 fictional snapshot caption.
+
+Demo deployment requires no credential. The complete supported secrets are:
+
+| Secret | Demo | Live | Purpose |
+| --- | --- | --- | --- |
+| `APP_MODE` | Set to `"demo"` | Set to `"live"` | Selects the repository/provider path |
+| `GEMINI_API_KEY` | Omit | Required for live Gemini only | Server-side Gemini authentication |
+| `GEMINI_MODEL` | Optional | Optional; defaults to `gemini-2.5-flash` | Gemini model name |
+| `SUPABASE_URL` | Omit | Required | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Omit | Required | Read-only dashboard client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Omit | Optional trusted writes only | Backend writer; never needed by the public read-only dashboard |
+
+A full live read-and-summary configuration uses root-level TOML values:
+
+```toml
+APP_MODE = "live"
+GEMINI_API_KEY = "replace-in-cloud-settings"
+GEMINI_MODEL = "gemini-2.5-flash"
+SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
+SUPABASE_ANON_KEY = "replace-in-cloud-settings"
+```
+
+Do not add the service-role key to a public read-only deployment. Configure it
+only for a separately reviewed trusted backend writer such as the documented
+n8n process.
+
+## Security boundaries
+
+- Every committed and publicly readable record is fictional.
+- Python calculates metrics and evaluates alert rules.
+- Gemini receives validated results and returns narrative structured output
+  only; provider failure visibly falls back.
+- Humans decide retries, escalations, approvals, and operational actions.
+- Demo mode creates no Gemini or Supabase client.
+- Live mode fails closed when Supabase read configuration is missing and never
+  silently reads local fixtures.
+- The anon key is for RLS-controlled reads. The service-role key is restricted
+  to trusted server-side writes.
+- n8n writes raw metric inputs and workflow observations, never alerts.
+- `.env`, virtual environments, caches, and `.streamlit/secrets.toml` are
+  ignored.
+
+See [security and privacy](docs/security-and-privacy.md), the
+[workflow-failure SOP](docs/sop-workflow-failure.md), and
+[scoring and alert rules](docs/scoring-and-alert-rules.md).
+
+## Repository structure
+
+```text
+.
+├── app.py
+├── pyproject.toml
+├── requirements.txt
+├── .streamlit/config.toml
+├── data/demo/
+├── docs/
+│   ├── architecture.md
+│   ├── current-status.md
+│   ├── demo-script.md
+│   ├── n8n-workflow.md
+│   ├── scoring-and-alert-rules.md
+│   ├── security-and-privacy.md
+│   └── sop-workflow-failure.md
+├── n8n/
+│   ├── sample-data/
+│   └── workflows/
+├── src/control_center/
+│   ├── models/
+│   ├── providers/
+│   ├── repositories/
+│   ├── services/
+│   └── ui/
+├── supabase/migrations/
+└── tests/
+```
+
+## Interview talking points
+
+- Deterministic-first design: the same fictional snapshot always produces the
+  same metrics and alerts.
+- Clear authority boundaries: code owns calculations, humans own decisions,
+  and AI owns only constrained narrative assistance.
+- Fail-closed live mode: missing or unavailable Supabase configuration never
+  causes a silent local-data fallback.
+- Provider portability: Gemini and deterministic providers share a validated
+  summary interface; Claude remains an optional stub.
+- Persistence isolation: Streamlit contains no Supabase calls, and mapping
+  between Pydantic and database rows lives in one repository boundary.
+- Safe automation: n8n uses fixed fictional inputs, idempotent upserts, and no
+  alert or retry authority.
+- Testability: external providers are mocked and network use is blocked in
+  relevant offline tests.
+- A concise 3–5 minute walkthrough is available in
+  [`docs/demo-script.md`](docs/demo-script.md).
 
 All current data is fictional and exists only to demonstrate deterministic
 behavior. AI will never control calculations, alert decisions, approvals, or
-business rules. Future AI features may explain deterministic results, but the
-underlying rules remain owned by application code and configuration.
+business rules.

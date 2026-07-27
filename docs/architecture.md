@@ -18,6 +18,24 @@ Repository data -> Pydantic validation -> deterministic metric service
 The Streamlit entry point depends on repository interfaces and contains no
 Supabase SDK calls. Provider-specific operations stay in the repository layer.
 
+## Deployment boundary
+
+`app.py` is the root entry point for local execution and Streamlit Community
+Cloud. The root `requirements.txt` installs the local `src/` package with
+`-e .`; `pyproject.toml` supplies the complete runtime dependency ranges.
+
+Community Cloud starts the application from the repository root, so committed
+demo fixtures resolve through the project-relative paths in `app.py`.
+`.streamlit/config.toml` contains presentation configuration only. Runtime
+values are root-level Streamlit secrets, which become environment variables
+consumed and validated by `AppSettings`.
+
+The recommended public deployment sets only `APP_MODE=demo`. Live mode requires
+Supabase URL and anon credentials before the repository factory constructs a
+client. Gemini additionally requires its API key for live narrative output.
+Missing Gemini configuration falls back visibly; missing Supabase read
+configuration stops live data loading safely.
+
 ## n8n ingestion boundary
 
 `n8n/workflows/dtc-operations-ingestion.json` is a trusted server-side writer.
@@ -81,5 +99,6 @@ retries, approve actions, or invoke Gemini.
 
 ## Deferred work
 
-Live commerce and marketing connectors, scheduled production automation, final
-deployment, and presentation polish remain deferred.
+Live commerce and marketing connectors and scheduled production automation
+remain out of scope. Selecting a public URL, entering cloud settings, and adding
+final screenshots are manual delivery-owner actions.

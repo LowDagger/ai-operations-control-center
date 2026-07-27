@@ -1,10 +1,10 @@
 # Current status
 
-## Milestone 5
+## Final delivery milestone
 
-Milestone 5 adds one manually triggered n8n ingestion workflow while preserving
-the deterministic Python calculations, alert rules, Gemini boundaries, and
-repository safety from prior milestones.
+The project is prepared for a public Streamlit demo and structured interview
+walkthrough. The final milestone adds delivery configuration and operational
+documentation without changing product behavior.
 
 Implemented:
 
@@ -30,6 +30,13 @@ Implemented:
 - A controlled demo branch upserts a fixed failed workflow run without writing
   a metric snapshot or alert.
 - Fixed UUIDs and timestamps keep repeated workflow demonstrations predictable.
+- `app.py` is the root Streamlit Community Cloud entry point.
+- `requirements.txt` installs the local `src/` package, whose four runtime
+  dependencies remain authoritative in `pyproject.toml`.
+- Public deployment defaults explicitly to `APP_MODE=demo` and needs no
+  credentials.
+- The repository includes a 3–5 minute demo script, workflow-failure SOP, and
+  formula/alert-rule reference.
 
 Current limitations:
 
@@ -41,8 +48,16 @@ Current limitations:
   it has no live Shopify, Meta Ads, Klaviyo, or Google Sheets integrations.
 - Supabase tables must contain fictional portfolio data only under the included
   public anon-read policy.
-- Final deployment and presentation polish have not started.
+- Screenshots remain documented placeholders until a deployment URL is chosen.
+- Deployment itself remains a manual owner action in Streamlit Community Cloud.
 
-See `docs/n8n-workflow.md` for import and execution instructions. Validation
-results are recorded in the Milestone 5 implementation report rather than
-hardcoded here.
+Operational references:
+
+- `docs/demo-script.md`
+- `docs/sop-workflow-failure.md`
+- `docs/scoring-and-alert-rules.md`
+- `docs/n8n-workflow.md`
+- `docs/security-and-privacy.md`
+
+Validation results are reported with the final delivery rather than hardcoded
+in this status document.
