@@ -4,7 +4,7 @@ import os
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 
 class AppMode(StrEnum):
@@ -20,13 +20,21 @@ class AppSettings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     app_mode: AppMode = AppMode.DEMO
+    gemini_api_key: SecretStr | None = Field(default=None, repr=False)
+    gemini_model: str = Field(default="gemini-2.5-flash", min_length=1)
 
     @classmethod
     def from_environment(cls) -> "AppSettings":
         """Read the app mode from the environment with a safe demo default."""
 
         app_mode = os.environ.get("APP_MODE", AppMode.DEMO.value)
-        return cls(app_mode=app_mode.strip().lower())
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip() or None
+        model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        return cls(
+            app_mode=app_mode.strip().lower(),
+            gemini_api_key=api_key,
+            gemini_model=model,
+        )
 
 
 class AlertThresholds(BaseModel):
